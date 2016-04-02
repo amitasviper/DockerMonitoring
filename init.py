@@ -35,7 +35,7 @@ def error_report():
 @app.route('/jsondata')
 def json_data():
 	time.sleep(1)
-	data = {'cpu_usage': [random.randrange(0, 100) for x in range(2)], 'memory_usage': random.randrange(0, 100), 'network_usage' : random.randrange(0, 100), 'io':random.randrange(0, 100)}
+	data = {'cpu_usage': [random.randrange(0, 100) for x in range(3)], 'memory_usage': random.randrange(0, 100), 'network_usage' : random.randrange(0, 100), 'io':random.randrange(0, 100)}
 	print data
 	return jsonify(data)
 

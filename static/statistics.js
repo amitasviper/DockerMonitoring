@@ -14,21 +14,25 @@ function get_data(var_series, var_url, json_key){
 
 			x = (new Date()).getTime(); // current time
 			if(json_key == 'cpu_usage'){
-                console.log("The cpu_usage array is : " + JSON.stringify(data));
+                //console.log("The cpu_usage array is : " + JSON.stringify(data));
                 var flag = false;
+                var flag2 = false;
                 for(i = 0; i < var_series.length; i++){
                     if(i == var_series.length - 1){
                         flag = true;
+                        flag2 = true;
                     }
                     z = data.cpu_usage[i];
-                    var_series[i].addPoint([x, z], flag);
+                    var_series[i].addPoint([x, z], flag, flag2);
                 }
 			}
             else{
-                y = data.json_key;
-                var_series[0].addPoint([x, y], true);
+                y = data[json_key];
+                console.log("The x and y values are : " + x + "  "+ y);
+                var_series[0].addPoint([x, y], true, true);
             }
-			console.log("Series : "+var_series[0])
+            
+			//console.log("Series : "+var_series[0])
 			get_data(var_series, var_url, json_key);
 		},
 		error: function(status, error){
