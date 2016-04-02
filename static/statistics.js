@@ -23,7 +23,7 @@ function get_data(var_series, var_url, json_key){
                         flag2 = true;
                     }
                     z = data.cpu_usage[i];
-                    var_series[i].addPoint([x, z], flag, flag2);
+                    var_series[i].addPoint([x, z], flag, var_series[i].data.length >= var_series[0].data.length ? true : false);
                 }
 			}
             else{
@@ -138,7 +138,7 @@ function create_series_array(json_key){
 	var temp_series = [];
 	for (j = 0; j <size; j += 1){
 		instance_series = {
-			name: 'Random data',
+			name: 'CPU #' + j,
 			data: (function () {
 			    	// generate an array of random data
 			    	var data = [],
