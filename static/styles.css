@@ -96,14 +96,14 @@
 }
 div.hidden
 {
-   display: block
+   display: none
 }
 
 #page {
-    display: none;
+    display: block;
 }
 #loading {
-    display: block;
+    display: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -142,4 +142,12 @@ div.hidden
   color:#fff;
   font-size:14px;
   text-decoration:none;
+}
+#content{
+  margin: 20px;
+}
+#footer{
+  margin-left: 20px;
+  position:absolute;
+  bottom: 0px;
 }

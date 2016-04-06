@@ -80,6 +80,7 @@ def json_data_containers():
 	for i in range(10):
 		data.append(get_dummy_container_info())
 	#print data
+	#time.sleep(3)
 	return Response(json.dumps(data),  mimetype='application/json')
 
 

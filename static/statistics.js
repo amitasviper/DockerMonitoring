@@ -51,6 +51,8 @@ function get_data(var_series, var_url, json_key){
 }
 
 function initialise(){
+    show('page', false);
+    show('loading', true);
 	console.log("Into the initialise phase");
 	render_chart("#memory_usage_chart", memory_series, '/jsondata', 'memory_usage');
 	render_chart("#cpu_usage_chart", cpu_series, '/jsondata', 'cpu_usage');
