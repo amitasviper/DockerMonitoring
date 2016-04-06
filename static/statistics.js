@@ -1,5 +1,6 @@
 
 var memory_series, cpu_series, network_series;
+var friendly_name = {'cpu_usage': 'CPU Usage', 'memory_usage' : 'Memory Usage', 'network_usage' : 'Network Usage'};
 
 function get_data(var_series, var_url, json_key){
     //console.log("calling for : " + json_key);
@@ -80,7 +81,7 @@ function render_chart(container_name, series_name, url, json_key) {
                 }
             },
             title: {
-                text: 'Live random data'
+                text: friendly_name[json_key]
             },
             xAxis: {
                 type: 'datetime',
@@ -138,7 +139,7 @@ function create_series_array(json_key){
 	var temp_series = [];
 	for (j = 0; j <size; j += 1){
 		instance_series = {
-			name: 'CPU #' + j,
+			name: friendly_name[json_key] + ' #' + j,
 			data: (function () {
 			    	// generate an array of random data
 			    	var data = [],
@@ -148,7 +149,7 @@ function create_series_array(json_key){
 			    	for (i = -19; i <= 0; i += 1) {
 			    	    data.push({
 			    	        x: time + i * 1000,
-			    	        y: Math.random()
+			    	        y: Math.random()*100
 			    	    });
 			    	}
 			    	return data;

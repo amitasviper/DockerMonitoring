@@ -31,4 +31,14 @@ function getBaseURL() {
         return location.protocol + "//" + location.hostname + (location.port && ":" + location.port);
 }
 
+$(function(){
+    $('#side_nav').hover(function(){
+        $(this).animate({width:'200px'},500);
+        $('#page').animate({'margin-left':'200px'}, 500);
+    },function(){
+        $(this).animate({width:'35px'},500);
+        $('#page').animate({'margin-left':'35px'}, 500);
+    }).trigger('mouseleave');
+});
+
 window.onload = setActive();
