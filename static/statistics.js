@@ -10,6 +10,7 @@ function get_data(var_series, var_url, json_key){
   		url: var_url,
   		dataType: 'json',
 		success: function(data){
+            console.log(data);
             show('page', true);
             show('loading', false);
 
@@ -51,10 +52,11 @@ function get_data(var_series, var_url, json_key){
 }
 
 function initialise(){
+    console.log("The container id is :" +container_id);
     show('page', false);
     show('loading', true);
 	console.log("Into the initialise phase");
-	render_chart("#memory_usage_chart", memory_series, '/jsondata', 'memory_usage');
+	render_chart("#memory_usage_chart", memory_series, '/jsondata' + '/' + container_id, 'memory_usage');
 	render_chart("#cpu_usage_chart", cpu_series, '/jsondata', 'cpu_usage');
 	render_chart("#network_usage_chart", network_series, '/jsondata', 'network_usage');
 

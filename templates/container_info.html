@@ -13,6 +13,9 @@
 {% block content %}
 
 	{% if container_id %}
+        <script type="text/javascript">
+            var container_id = "{{ container_id }}"
+        </script>
 		<script src="{{ url_for('static', filename='highcharts.js') }}" type="text/javascript"></script>
 		<script src="{{ url_for('static', filename='statistics.js') }}" type="text/javascript"></script>
 		<div class="charts">

@@ -151,3 +151,19 @@ div.hidden
   position:absolute;
   bottom: 0px;
 }
+
+.table_element {
+  background-color: #E0D8E0;
+  border-radius: 5px;
+  margin: 100px;
+  width: 200px;
+  height: 200px;
+  line-height: 100px;
+  text-align: center;
+}
+
+.table_element span {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: normal;      
+}
