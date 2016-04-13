@@ -12,7 +12,8 @@ function get_data(var_url)
             show('page', true);
             show('loading', false);
 
-            console.log(data);
+            data = JSON.parse(data);
+            //console.log(data);
 
 			x = (new Date()).getTime(); // current time
 
@@ -27,6 +28,7 @@ function get_data(var_url)
                         flag2 = true;
                 }
                 z = data.cpu_stats.cpu_usage.percpu_usage[i];
+                console.log("CPU values are : " + x + "  "+ y);
                 cpu_series[i].addPoint([x, z], flag1, cpu_series[i].data.length >= cpu_series[0].data.length ? true : false);
             }
 
@@ -59,7 +61,7 @@ function get_data(var_url)
             }*/
             
 			//console.log("Series : "+var_series[0])
-			get_data(var_url);
+			//get_data(var_url);
 		});
 		/*error: function(status, error)
         {
@@ -120,8 +122,19 @@ function render_chart(container_name, series_name, json_key) {
                 events: {
                     load: function () {
                         // set up the updating of the chart each second
-                        series_name = this.series;
-                        console.log("Size of the series " + series_name + " is : " + series_name.length);
+                        if(json_key == 'cpu_stats')
+                        {
+                            cpu_series = this.series;
+                        }
+                        else if( json_key == 'memory_stats')
+                        {
+                            memory_series = this.series;
+                        }
+                        else if (json_key == 'network_stats') 
+                        {
+                            network_stats = this.series;
+                        };
+                        console.log("Size of the series " + this.series + " is : " + this.series.length);
                     }
                 }
             },
@@ -162,19 +175,19 @@ function render_chart(container_name, series_name, json_key) {
 
 function create_series_array(json_key){
 	var size = 1;
+    console.log("Generating series for " + json_key);
 	if (json_key == 'cpu_stats') {
 
 		size = 2;
         socket.emit('channel_container_one_sample_req', container_id);
         socket.on('channel_container_one_sample_resp', function (data)
         {
+            console.log(data);
             //data = JSON.parse(data);
             cpu_count = data.cpu_stats.cpu_usage.percpu_usage.length;
-            console.log("The type is : " + cpu_count);
             size = cpu_count;
+            console.log("Calculated the cpu count : " + size );
         });
-
-        console.log("Calculated the cpu count : " +size );
 
 	};
 	var temp_series = [];

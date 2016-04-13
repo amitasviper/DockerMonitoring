@@ -189,13 +189,13 @@ def collect_container_one(req):
 	container_id = req
 
 	@copy_current_request_context
-	def background_worker_one():
+	def background_worker_one_sample():
 		if True:
 			print "Running on the worker thread onet"
 			data = requests.get(SERVER_ADDRESS + '/containers/' + container_id + '/stats?stream=false')
 			data = data.json()
 			emit('channel_container_one_sample_resp', data)
-	lthread = Thread(target=background_worker_one)
+	lthread = Thread(target=background_worker_one_sample)
 	lthread.daemon = True
 	lthread.start()
 
