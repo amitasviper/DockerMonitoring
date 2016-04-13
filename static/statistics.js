@@ -39,6 +39,14 @@ function get_data(var_url)
             //console.log("The x and y values are : " + x + "  "+ y);
             memory_series[0].addPoint([x, y], true, true);
 
+            y = data.networks.eth0.rx_bytes;
+            //console.log("The x and y values are : " + x + "  "+ y);
+            network_series[0].addPoint([x, y], false, true);
+
+            y = data.networks.eth0.rx_bytes;
+            //console.log("The x and y values are : " + x + "  "+ y);
+            network_series[1].addPoint([x, y], true, true);
+
 
             //for network usage graph
             //empty for the time being
@@ -145,7 +153,7 @@ function render_chart(container_name, series_name, json_key) {
                         }
                         else if (json_key == 'network_stats') 
                         {
-                            network_stats = this.series;
+                            network_series = this.series;
                         };
                         console.log("Size of the series " + this.series + " is : " + this.series.length);
                     }
@@ -191,9 +199,13 @@ function create_series_array(json_key){
     console.log("Generating series for " + json_key);
 	if (json_key == 'cpu_stats')
     {
-
 		size = cpu_count;
     }
+
+    else if (json_key == 'network_stats') 
+    {
+        size = 2;
+    };
 
     var temp_series = [];
     for (j = 0; j <size; j += 1){
