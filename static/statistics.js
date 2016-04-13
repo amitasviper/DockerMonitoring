@@ -1,7 +1,7 @@
 
 var memory_series, cpu_series, network_series;
 var friendly_name = {'cpu_stats': 'CPU Usage', 'memory_stats' : 'Memory Usage', 'network_stats' : 'Network Usage'};
-var socket;
+var socket, cpu_count=1;
 function get_data(var_url)
 {
     //console.log("calling for : " + json_key);
@@ -20,7 +20,9 @@ function get_data(var_url)
             //for cpu graph
             var flag1 = false;
             var flag2 = false;
-            for(i - 0; i < cpu_series.length; i++)
+
+            //console.log("CPU values ALL : " + data.cpu_stats.cpu_usage.percpu_usage);
+            for(i = 0; i < cpu_series.length; i++)
             {
                 if(i == cpu_series.length - 1)
                 {
@@ -28,13 +30,13 @@ function get_data(var_url)
                         flag2 = true;
                 }
                 z = data.cpu_stats.cpu_usage.percpu_usage[i];
-                console.log("CPU values are : " + x + "  "+ y);
+                //console.log("CPU values are : " + x + "  "+ z);
                 cpu_series[i].addPoint([x, z], flag1, cpu_series[i].data.length >= cpu_series[0].data.length ? true : false);
             }
 
             //for memory graph
             y = data.memory_stats.usage;
-            console.log("The x and y values are : " + x + "  "+ y);
+            //console.log("The x and y values are : " + x + "  "+ y);
             memory_series[0].addPoint([x, y], true, true);
 
 
@@ -91,18 +93,29 @@ function get_data(var_url)
 		}*/
 }
 
-function initialise(){
-    console.log("The container id is :" +container_id);
-    socket = io.connect('http://' + document.domain + ':' + location.port);
-    show('page', false);
-    show('loading', true);
-	console.log("Into the initialise phase");
-	render_chart("#memory_usage_chart", memory_series, 'memory_stats');
-	render_chart("#cpu_usage_chart", cpu_series, 'cpu_stats');
-	render_chart("#network_usage_chart", network_series, 'network_stats');
+function initialise_graphs(){
+    console.log("Into the initialise phase");
+    render_chart("#memory_usage_chart", memory_series, 'memory_stats');
+    render_chart("#cpu_usage_chart", cpu_series, 'cpu_stats');
+    render_chart("#network_usage_chart", network_series, 'network_stats');
 
     url = '/container_stats_stream/' + container_id;
     get_data(url);
+}
+
+function initialise(){
+    console.log("The container id is :" +container_id);
+    socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.emit('channel_container_one_sample_req', container_id);
+    socket.on('channel_container_one_sample_resp', function (data)
+    {
+        console.log(data);
+        //data = JSON.parse(data);
+        cpu_count = data.cpu_stats.cpu_usage.percpu_usage.length;
+        initialise_graphs();
+    });
+    show('page', false);
+    show('loading', true);
 
 }
 
@@ -176,43 +189,36 @@ function render_chart(container_name, series_name, json_key) {
 function create_series_array(json_key){
 	var size = 1;
     console.log("Generating series for " + json_key);
-	if (json_key == 'cpu_stats') {
+	if (json_key == 'cpu_stats')
+    {
 
-		size = 2;
-        socket.emit('channel_container_one_sample_req', container_id);
-        socket.on('channel_container_one_sample_resp', function (data)
-        {
-            console.log(data);
-            //data = JSON.parse(data);
-            cpu_count = data.cpu_stats.cpu_usage.percpu_usage.length;
-            size = cpu_count;
-            console.log("Calculated the cpu count : " + size );
-        });
+		size = cpu_count;
+    }
 
-	};
-	var temp_series = [];
-	for (j = 0; j <size; j += 1){
-		instance_series = {
-			name: friendly_name[json_key] + ' #' + j,
-			data: (function () {
-			    	// generate an array of random data
-			    	var data = [],
-			    	    time = (new Date()).getTime(),
-			    	    i;
-			
-			    	for (i = -19; i <= 0; i += 1) {
-			    	    data.push({
-			    	        x: time + i * 1000,
-			    	        y: Math.random()*100
-			    	    });
-			    	}
-			    	return data;
-			    }())
-			}
-		temp_series[j] = instance_series;
-	}
-	return temp_series;
+    var temp_series = [];
+    for (j = 0; j <size; j += 1){
+        instance_series = {
+            name: friendly_name[json_key] + ' #' + j,
+            data: (function () {
+                    // generate an array of random data
+                    var data = [],
+                        time = (new Date()).getTime(),
+                        i;
+            
+                    for (i = -19; i <= 0; i += 1) {
+                        data.push({
+                            x: time + i * 1000,
+                            y: Math.random()*100
+                        });
+                    }
+                    return data;
+                }())
+            }
+        temp_series[j] = instance_series;
+    }
+    return temp_series;
 }
+
 
 function show(id, value) {
     document.getElementById(id).style.display = value ? 'block' : 'none';
