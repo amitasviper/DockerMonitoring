@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+	<head>
+		<title> Sample Application</title>
+		<script src="{{ url_for('static', filename='socket.io.min.js') }}" type="text/javascript"></script>
+		<script src="{{ url_for('static', filename='chat.js') }}" type="text/javascript"></script>
+	</head>
+
+	<body>
+		<label>Input Text</label>
+		<input type="text" id="field" placeholder="Enter message"></input>
+		<button id="send">Send Msg</button>
+
+		<div id="content">
+		</div>
+
+	</body>
+</html>
