@@ -99,6 +99,13 @@ div.hidden
    display: none
 }
 
+#empty_response
+{
+  display: none;
+  text-align: center;
+  font-size: 40px;
+}
+
 #page {
     display: block;
 }

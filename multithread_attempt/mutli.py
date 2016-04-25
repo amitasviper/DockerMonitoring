@@ -34,46 +34,47 @@ elif async_mode == 'gevent':
     monkey.patch_all()
 
 import time
-from threading import Thread
+from threading import Thread, current_thread
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
 
+from Queue import Queue
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, async_mode=async_mode)
-thread = None
+threads = []
+queue = None
 
+resp = {1:'One', 2:'Two', 3:'Three', 4:'Four', 5:'Five', 6:'Six', 7:'Seven', 8:'Eight', 9:'Nine', 10:'Ten'}
 
-def background_thread():
+def background_thread(th_queue):
     """Example of how to send server generated events to clients."""
     count = 0
+    global resp
     while True:
-        time.sleep(10)
-        count += 1
-        socketio.emit('my response',
-                      {'data': 'Server generated event', 'count': count},
-                      namespace='/test')
+      print current_thread(), "Waiting: Queue is empty "
+      (container_id, client_context) = th_queue.get()
+      emit('my response',
+                      {'data': resp[int(container_id)], 'count': count})
+      time.sleep(15)
 
 
 @app.route('/')
 def index():
-    global thread
-    if thread is None:
-        thread = Thread(target=background_thread)
-        thread.daemon = True
-        thread.start()
     return render_template('index.html')
 
 
-@socketio.on('my event', namespace='/test')
+@socketio.on('my event')
 def test_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my response',
-         {'data': message['data'], 'count': session['receive_count']})
+    global queue
+    print "Namespace is : ",request.namespace
+    queue.put((message['data'], request.namespace))
 
 
-@socketio.on('my broadcast event', namespace='/test')
+@socketio.on('my broadcast event')
 def test_broadcast_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
@@ -81,7 +82,7 @@ def test_broadcast_message(message):
          broadcast=True)
 
 
-@socketio.on('join', namespace='/test')
+@socketio.on('join')
 def join(message):
     join_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -90,7 +91,7 @@ def join(message):
           'count': session['receive_count']})
 
 
-@socketio.on('leave', namespace='/test')
+@socketio.on('leave')
 def leave(message):
     leave_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -99,7 +100,7 @@ def leave(message):
           'count': session['receive_count']})
 
 
-@socketio.on('close room', namespace='/test')
+@socketio.on('close room')
 def close(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response', {'data': 'Room ' + message['room'] + ' is closing.',
@@ -108,7 +109,7 @@ def close(message):
     close_room(message['room'])
 
 
-@socketio.on('my room event', namespace='/test')
+@socketio.on('my room event')
 def send_room_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
@@ -116,7 +117,7 @@ def send_room_message(message):
          room=message['room'])
 
 
-@socketio.on('disconnect request', namespace='/test')
+@socketio.on('disconnect request')
 def disconnect_request():
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
@@ -124,15 +125,22 @@ def disconnect_request():
     disconnect()
 
 
-@socketio.on('connect', namespace='/test')
+@socketio.on('connect')
 def test_connect():
     emit('my response', {'data': 'Connected', 'count': 0})
 
 
-@socketio.on('disconnect', namespace='/test')
+@socketio.on('disconnect')
 def test_disconnect():
     print('Client disconnected', request.sid)
 
 
 if __name__ == '__main__':
-    socketio.run(app, port=3000, debug=True)
+  queue = Queue()
+  for i in range(10):
+    thread = Thread(target=background_thread, args=(queue,))
+    thread.daemon = True
+    thread.start()
+    threads.append(thread)
+  socketio.run(app, port=3000, debug=True)
+

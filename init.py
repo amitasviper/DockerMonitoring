@@ -1,12 +1,12 @@
+from config import *
+
 from flask import Flask, render_template, url_for, request, jsonify, Response, copy_current_request_context
 import random, time, json, urllib2, requests
-from threading import Thread
+from threading import Thread, current_thread, Event
+from contextlib import closing
+from Queue import Queue
 
 from flask_socketio import SocketIO, send, emit
-
-SERVER_IP = '192.168.144.148'
-SERVER_PORT = '4243'
-SERVER_ADDRESS = 'http://' + SERVER_IP + ':' + SERVER_PORT
 
 async_mode = None
 
@@ -39,21 +39,7 @@ elif async_mode == 'gevent':
 
 app = Flask(__name__)
 thread = None
-
-def background_worker():
-	if True:
-		print "Running on the worker thread"
-		data = requests.get(SERVER_ADDRESS + '/containers/json?all=1')
-		data = data.json()
-		print "Got response"
-		#print data
-		emit('channel_container_ids_resp', data)
-
-def background_worker_all_day(rest_resp):
-	for line in rest_resp.iter_lines():
-		if line:
-			data = line.json()
-			socketio.emit('channel_container_one', data)
+threads = {}
 
 #Renders the home page of the application server.
 @app.route('/')
@@ -160,46 +146,67 @@ def handle_json(json):
 socketio = SocketIO(app, async_mode=async_mode)
 
 
+"""from contextlib import closing
+
+with closing(requests.get('http://httpbin.org/get', stream=True)) as r:
+    # Do things with the response here."""
+
 """ For ploting graph """
 
-@socketio.on('channel_container_one_req')
-def collect_container_one(req):
-	print "Request received from browser one: ", req
+threads = {}
+
+@socketio.on('channel_container_info_stream')
+def collect_container_info_stream(req):
+
+	print "Request received from browser for container info stream: ", req
 	container_id = req
 
+	if threads.has_key(container_id):
+		print "Request is already being served"
+		return
+
 	@copy_current_request_context
-	def background_worker_one():
+	def background_worker_container_info_stream():
+		start = time.time()
 		if True:
-			print "Running on the worker thread onet"
-			rest_resp = requests.get(SERVER_ADDRESS + '/containers/' + container_id + '/stats?stream=true', stream=True)
-			for line in rest_resp.iter_lines():
-				if line:
-					data = line
-					print data,'\n\n\n\n'
-					emit('channel_container_one_resp', data)
-	lthread = Thread(target=background_worker_one)
+			print "Running on the worker thread for container stream : "+container_id
+			with closing(requests.get(SERVER_ADDRESS + '/containers/' + container_id + '/stats?stream=true', stream=True)) as rest_resp:
+				for line in rest_resp.iter_lines():
+					if line:
+						data = line
+						end = time.time()
+						print current_thread()," : ", end - start, " sec"
+						start = end
+						emit('channel_container_info_stream' + '_'+container_id, data, broadcast=True)
+	lthread = Thread(target=background_worker_container_info_stream)
 	lthread.daemon = True
 	lthread.start()
 
+	threads[container_id] = lthread
 
 
-@socketio.on('channel_container_one_sample_req')
-def collect_container_one(req):
-	print "Request received from browser one: ", req
+
+@socketio.on('channel_container_info_json')
+def collect_channel_container_info_json(req):
+	print "Request received from browser for intial json data: ", req
 	container_id = req
 
 	@copy_current_request_context
-	def background_worker_one_sample():
+	def background_worker_channel_container_info_json():
 		if True:
-			print "Running on the worker thread onet"
+			print "Running on the worker thread that exits after giving json data"
 			data = requests.get(SERVER_ADDRESS + '/containers/' + container_id + '/stats?stream=false')
 			data = data.json()
-			emit('channel_container_one_sample_resp', data)
-	lthread = Thread(target=background_worker_one_sample)
+			print type(data), data['memory_stats']['stats']
+			for key, val in data.iteritems():
+				print key
+			if data['memory_stats']['stats'] == None:
+				data = 'false'
+			print data
+			emit('channel_container_info_json', data)
+	lthread = Thread(target=background_worker_channel_container_info_json)
 	lthread.daemon = True
 	lthread.start()
-
-
 
 
 """ For listing all the containers"""
@@ -221,7 +228,39 @@ def collect_container_ids(req):
 	lthread.daemon = True
 	lthread.start()
 
+from dbhelper import MConnection
+
+def save_to_db_worker(db_con):
+	while True:
+
+		data = requests.get(SERVER_ADDRESS + '/containers/json')
+		data = data.json()
+		container_id_dict = {}
+		for container in data:
+			status = container['Status']
+			if status.startswith('Up'):
+				container_id = container['Id']
+				container_id_dict[container_id] = 1
+
+		for container_id, status in container_id_dict.iteritems():
+			if status != 0:
+				data = requests.get(SERVER_ADDRESS + '/containers/' + container_id + '/stats?stream=false')
+				data = data.content
+				if data.startswith("No such container"):
+					container_id_dict[continer_id] = 0
+				else:
+					db_con.save_data(container_id, data)
+		time.sleep(60)
+		
+
 if __name__ == "__main__":
+
+	db_con = MConnection(debug=2)
+	
+	db_thread = Thread(target=save_to_db_worker, args=(db_con,))
+	db_thread.daemon = True
+	db_thread.start()
+	
 	socketio.run(app, host='', port=5000)
 	#app.debug = True
 	#app.run('', port=3000)

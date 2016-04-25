@@ -5,9 +5,10 @@ var socket, cpu_count=1;
 function get_data(var_url)
 {
     //console.log("calling for : " + json_key);
-        socket.emit('channel_container_one_req', container_id);
+    var count = 0;
+        socket.emit('channel_container_info_stream', container_id);
 
-		socket.on('channel_container_one_resp', function (data)
+		socket.on('channel_container_info_stream'+"_"+container_id, function (data)
         {
             show('page', true);
             show('loading', false);
@@ -72,6 +73,15 @@ function get_data(var_url)
             
 			//console.log("Series : "+var_series[0])
 			//get_data(var_url);
+
+            /*count += 1;
+            if(count > 5)
+            {
+              socket.emit('channel_container_one_req', 'stillconnected');
+              count = 0;
+            }*/
+
+
 		});
 		/*error: function(status, error)
         {
@@ -112,20 +122,33 @@ function initialise_graphs(){
 }
 
 function initialise(){
-    console.log("The container id is :" +container_id);
-    socket = io.connect('http://' + document.domain + ':' + location.port);
-    socket.emit('channel_container_one_sample_req', container_id);
-    socket.on('channel_container_one_sample_resp', function (data)
-    {
-        console.log(data);
-        //data = JSON.parse(data);
-        cpu_count = data.cpu_stats.cpu_usage.percpu_usage.length;
-        initialise_graphs();
-    });
     show('page', false);
     show('loading', true);
 
+    console.log("The container id is :" +container_id);
+    socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.emit('channel_container_info_json', container_id);
+    socket.on('channel_container_info_json', function (data)
+    {
+        console.log(data);
+        if(data == 'false')
+        {
+            show('page', true);
+            show('loading', false);
+            show('charts', false);
+            show('empty_response', true);
+
+        }
+        else
+        {
+            //data = JSON.parse(data);
+            cpu_count = data.cpu_stats.cpu_usage.percpu_usage.length;
+            initialise_graphs();
+        }
+        
+    });
 }
+
 
 function render_chart(container_name, series_name, json_key) {
     $(document).ready(function () {

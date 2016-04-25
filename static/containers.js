@@ -2,6 +2,7 @@ function get_data(){
     var socket = io.connect('http://' + document.domain + ':' + location.port);
     socket.emit('channel_container_ids_req', 'ready');
 
+    var count = 0;
     socket.on('channel_container_ids_resp', function (data) {
         show('page', true);
         show('loading', false);
@@ -16,6 +17,12 @@ function get_data(){
             console.log("Mouse Over");
           })
         });
+        count += 1;
+        if(count > 5)
+        {
+          socket.emit('channel_container_ids_req', 'stillconnected');
+          count = 0;
+        }
     });
 }
 
