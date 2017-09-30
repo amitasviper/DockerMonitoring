@@ -115,43 +115,9 @@ def container_stats_stream(container_id=None):
 
 
 
-"""******************************* Using Socket IO from here onwards ***************************"""
-
-
-
-
-
-"""#Renders the home page of the application server.
-@app.route('/test')
-def testing():
-	#print url_for('static', filename='../js/statistics.js')
-	return render_template('testing.html', title="Home")
-
-@socketio.on('message')
-def handle_message(message):
-	print "Received : ", message
-
-@socketio.on('send')
-def handle_send(message):
-	data = json.dumps(message)
-	message = json.loads(data)
-	message['message'] = "Modified message : " + message['message']
-	print "message is ",message
-	emit('message', message, broadcast=True)
-
-@socketio.on('json')
-def handle_json(json):
-	print "Received json : ", str(json)"""
 
 socketio = SocketIO(app, async_mode=async_mode)
 
-
-"""from contextlib import closing
-
-with closing(requests.get('http://httpbin.org/get', stream=True)) as r:
-    # Do things with the response here."""
-
-""" For ploting graph """
 
 threads = {}
 
